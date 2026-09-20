@@ -1,0 +1,102 @@
+import requests
+import smtplib
+from email.mime.text import MIMEText
+
+# -----------------------------
+# API DETAILS
+# -----------------------------
+
+API_KEY = "YOUR_NEW_OPENWEATHER_API_KEY"
+
+CITY = "Colombo"
+COUNTRY = "LK"
+
+# -----------------------------
+# EMAIL DETAILS
+# -----------------------------
+
+SENDER_EMAIL = "deepathangadurai923@gmail.com"
+APP_PASSWORD = "YOUR_NEW_GMAIL_APP_PASSWORD"
+RECEIVER_EMAIL = "narmathaashok59@gmail.com"
+
+
+# -----------------------------
+# GET WEATHER DATA
+# -----------------------------
+
+url = "https://api.openweathermap.org/data/2.5/weather"
+
+params = {
+    "q": f"{CITY},{COUNTRY}",
+    "appid": API_KEY,
+    "units": "metric"
+}
+
+response = requests.get(url, params=params)
+
+
+if response.status_code == 200:
+
+    data = response.json()
+
+    temperature = data["main"]["temp"]
+    humidity = data["main"]["humidity"]
+    weather = data["weather"][0]["description"]
+    wind_speed = data["wind"]["speed"]
+
+    # -----------------------------
+    # CREATE EMAIL
+    # -----------------------------
+
+    subject = "Daily Sri Lanka Weather Update"
+
+    message = f"""
+Daily Sri Lanka Weather Update
+
+Location: {CITY}, Sri Lanka
+
+Temperature: {temperature}°C
+Weather Condition: {weather}
+Humidity: {humidity}%
+Wind Speed: {wind_speed} m/s
+
+Have a nice day!
+"""
+
+    email = MIMEText(message)
+
+    email["Subject"] = subject
+    email["From"] = SENDER_EMAIL
+    email["To"] = RECEIVER_EMAIL
+
+    # -----------------------------
+    # SEND EMAIL
+    # -----------------------------
+
+    try:
+
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+
+        server.login(SENDER_EMAIL, APP_PASSWORD)
+
+        server.sendmail(
+            SENDER_EMAIL,
+            RECEIVER_EMAIL,
+            email.as_string()
+        )
+
+        server.quit()
+
+        print("✅ Weather email sent successfully!")
+
+    except Exception as e:
+
+        print("❌ Email sending failed!")
+        print("Error:", e)
+
+else:
+
+    print("❌ Weather data could not be retrieved.")
+    print("Status Code:", response.status_code)
+    print("Response:", response.text)
